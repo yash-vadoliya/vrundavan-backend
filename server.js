@@ -4,7 +4,7 @@ const cors = require("cors");
 const routes = require("./routes/api_routes");
 const path = require("path");
 const bill = require("./routes/invoice");
-const HOST = '0.0.0.0';
+const HOST = process.env.DB_HOST;
 const PORT = process.env.PORT;
 
 // // const cors = require("cors");
