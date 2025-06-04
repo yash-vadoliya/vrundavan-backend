@@ -1,22 +1,23 @@
-require ('dotenv').config();
+require('dotenv').config();
 const mysql = require('mysql2');
 
-var con = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    database: process.env.DB_NAME,
+const pool = mysql.createPool({
+    host: process.env.DB_HOST,     // e.g., sql12.freesqldatabase.com
+    user: process.env.DB_USER,     // your DB user
+    password: process.env.DB_PASS, // your DB password
+    database: process.env.DB_NAME, // your DB name
     waitForConnections: true,
-    connectionLimit: 1000,
+    connectionLimit: 10,           // 10 is safer than 1000 for free DBs
     queueLimit: 0
 });
 
-con.query('SELECT 1', (err, results) => {
-    if(err){
-        console.log("Error to Connect Darabase",err);
+// Test connection
+pool.query('SELECT 1', (err, results) => {
+    if (err) {
+        console.error("❌ Error connecting to database:", err.message);
     } else {
-        console.log("Database Connect Successfully..");
+        console.log("✅ Database connected successfully.");
     }
 });
 
-module.exports = con.promise();
+module.exports = pool.promise(); // use `await pool.query(...)` in routes
