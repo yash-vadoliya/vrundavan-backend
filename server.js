@@ -4,7 +4,7 @@ const cors = require("cors");
 const routes = require("./routes/api_routes");
 const path = require("path");
 const bill = require("./routes/invoice");
-const HOST = process.env.DB_HOST;
+// const HOST = process.env.DB_HOST;
 const PORT = process.env.PORT;
 
 // // const cors = require("cors");
@@ -24,6 +24,6 @@ app.use('/images', express.static(path.join(__dirname, 'public/images')));
 app.use('/invoice', express.static(path.join(__dirname, 'public/invoice')));
 
 app.use("/", routes, bill);
-app.listen(() => {
+app.listen(PORT, () => {
     console.log(`App is Running on server`);
 })
