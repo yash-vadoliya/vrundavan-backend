@@ -24,6 +24,6 @@ app.use('/images', express.static(path.join(__dirname, 'public/images')));
 app.use('/invoice', express.static(path.join(__dirname, 'public/invoice')));
 
 app.use("/", routes, bill);
-app.listen(PORT, HOST ,() => {
-    console.log(`App is Running on http://${HOST}:${PORT}`);
+app.listen(() => {
+    console.log(`App is Running on server`);
 })
