@@ -23,8 +23,7 @@ app.use('/public', express.static('public'));
 app.use('/images', express.static(path.join(__dirname, 'public/images')));
 app.use('/invoice', express.static(path.join(__dirname, 'public/invoice')));
 
-app.use("/vrundavan", routes);
-app.use("/vrundavan", bill);
+app.use("/vrundavan", routes, bill);
 app.listen(PORT, () => {
     console.log(`App is Running on server`);
 })
