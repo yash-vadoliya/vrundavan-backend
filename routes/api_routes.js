@@ -10,7 +10,7 @@ router.post("/product", upload.single("image"), async (req, res) => {
   
   try {
     const { product_name, description, category, price, stock, status } = req.body;
-    const image_url = req.file ? `${req.file.filename}` : null;
+    const image_url = req.file ? `/images/${req.file.filename}` : null;
 
     if (!product_name || !description || !category || !price || !stock || !image_url) {
       return res.status(400).json({ error: "All fields are required, including image!" });
@@ -60,7 +60,7 @@ router.put("/product/:id", upload.single("image"), async (req, res) => {
   try {
     const { id } = req.params;
     const { product_name, description, category, price, stock, status } = req.body;
-    let image_url = req.file ? `/uploads/${req.file.filename}` : null;
+    let image_url = req.file ? `/images/${req.file.filename}` : null;
 
     // Fetch current image from database
     const [rows] = await db.query("SELECT image_url FROM products WHERE id = ?", [id]);
