@@ -8,7 +8,6 @@ const pool = mysql.createPool({
     database: process.env.DB_NAME,  
     port: process.env.DB_PORT, 
     ssl: {
-        minVersion: 'TLSv1.2',
         rejectUnauthorized: true
     },
     waitForConnections: true,
