@@ -2,12 +2,17 @@ require('dotenv').config();
 const mysql = require('mysql2');
 
 const pool = mysql.createPool({
-    host: process.env.DB_HOST,     // e.g., sql12.freesqldatabase.com
-    user: process.env.DB_USER,     // your DB user
-    password: process.env.DB_PASS, // your DB password
-    database: process.env.DB_NAME, // your DB name
+    host: process.env.DB_HOST,    
+    user: process.env.DB_USER,     
+    password: process.env.DB_PASS, 
+    database: process.env.DB_NAME,  
+    port: process.env.DB_PORT, 
+    ssl: {
+        minVersion: 'TLSv1.2',
+        rejectUnauthorized: true
+    },
     waitForConnections: true,
-    connectionLimit: 10,           // 10 is safer than 1000 for free DBs
+    connectionLimit: 10,           
     queueLimit: 0
 });
 
