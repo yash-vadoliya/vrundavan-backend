@@ -7,7 +7,7 @@ const upload = require('../middleware/multer');
 // Product Route
 // Product Insert Route
 router.post("/product", upload.single("image"), async (req, res) => {
-  
+
   try {
     const { product_name, description, category, price, stock, status } = req.body;
     // const image_url = req.file ? `/images/${req.file.filename}` : null;
@@ -30,13 +30,18 @@ router.post("/product", upload.single("image"), async (req, res) => {
 
 // Product Read Route
 router.get("/product", async (req, res) => {
-  const items = await db.query('SELECT * FROM `products`');
-  res.json(items);
+  try {
+    const [rows] = await db.query("SELECT * FROM products");
+    res.status(200).json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch products" });
+  }
 });
 
 // Product Read Route For Specific Product ID
 router.get("/product/:id", async (req, res) => {
-  try { 
+  try {
     const { id } = req.params;
     const sql = "SELECT * FROM products WHERE id = ?";
     const [rows] = await db.query(sql, [id]);
@@ -62,17 +67,12 @@ router.put("/product/:id", upload.single("image"), async (req, res) => {
     const { id } = req.params;
     const { product_name, description, category, price, stock, status } = req.body;
     // let image_url = req.file ? `/images/${req.file.filename}` : null;
-    const image_url = req.file.path; // Cloudinary image URL
+    const image_url = req.file.path || rows[0].image_url; // Cloudinary image URL  
     // Fetch current image from database
     const [rows] = await db.query("SELECT image_url FROM products WHERE id = ?", [id]);
     if (rows.length === 0) {
       return res.status(404).json({ error: "Product not found!" });
-    }
-    // Keep the existing image if no new file is uploaded
-    if (!image_url) {
-      image_url = rows[0].image_url;
-    }
-
+    } 
     const sql = "UPDATE products SET product_name = ?, description = ?, category = ?, price = ?, stock = ?, status = ?, image_url = ? WHERE id = ?";
     const values = [product_name, description, category, price, stock, status, image_url, id];
 
@@ -98,14 +98,14 @@ router.delete("/product/:id", async (req, res) => {
 
 // User Routes
 router.get("/user", async (req, res) => {
-    const items = await db.query('SELECT `username`, `password` FROM `user`');
-    res.json(items);
-  });
+  const items = await db.query('SELECT `username`, `password` FROM `user`');
+  res.json(items);
+});
 
 
 // Feedback Routes
 // Feedback Insert Route
-router.post("/feedback", async (req,res) => {
+router.post("/feedback", async (req, res) => {
   try {
     const { name, email, message_type, message } = req.body; // Extract data from request
 
@@ -118,8 +118,8 @@ router.post("/feedback", async (req,res) => {
 
     res.status(201).json({ message: "Feedback submitted successfully!", result });
   } catch (error) {
-      console.error("Database Insert Error:", error);
-      res.status(500).json({ error: "Internal Server Error" });
+    console.error("Database Insert Error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 })
 
@@ -137,8 +137,8 @@ router.post("/orders", async (req, res) => {
 
     // Insert order details into 'orders' table
     const [orderResult] = await db.query(
-        "INSERT INTO orders (customer_name, order_date, total_price , mobile, payment_status) VALUES (?, ?, ?, ?, ?)",
-        [customerName, orderDate, totalPrice, mobile, paymentStatus]
+      "INSERT INTO orders (customer_name, order_date, total_price , mobile, payment_status) VALUES (?, ?, ?, ?, ?)",
+      [customerName, orderDate, totalPrice, mobile, paymentStatus]
     );
 
     const orderId = orderResult.insertId;
@@ -148,10 +148,10 @@ router.post("/orders", async (req, res) => {
     await db.query("INSERT INTO order_items (order_id, product_name, quantity, price) VALUES ?", [productValues]);
 
     res.json({ message: "Order added successfully", orderId });
-} catch (error) {
+  } catch (error) {
     console.error("Error inserting order:", error);
     res.status(500).json({ error: "Internal Server Error" });
-}
+  }
 });
 
 // Order Read Route
@@ -205,12 +205,12 @@ router.get("/orders/:id", async (req, res) => {
     const [order] = await db.query("SELECT * FROM orders WHERE id = ?", [id]);
     const [products] = await db.query("SELECT * FROM order_items WHERE order_id = ?", [id]);
     const orderWithProducts = { ...order, products };
-    res.json(orderWithProducts); 
+    res.json(orderWithProducts);
 
-  } catch (error) { 
+  } catch (error) {
     console.error("Error fetching order:", error);
     res.status(500).json({ error: "Internal Server Error" });
-  } 
+  }
 });
 
 
@@ -219,27 +219,27 @@ router.put("/orders/:id", async (req, res) => {
   const orderId = req.params.id;
 
   try {
-      // Update the main order table
+    // Update the main order table
+    await db.query(
+      "UPDATE `orders` SET `customer_name`=?, `order_date`=?, `mobile`=?, `total_price`=?, `payment_status`=? WHERE `id`=?",
+      [customerName, orderDate, mobile, totalPrice, paymentStatus, orderId]
+    );
+
+    // Delete existing order items
+    await db.query("DELETE FROM `order_items` WHERE `order_id`=?", [orderId]);
+
+    // Insert updated products
+    for (const product of products) {
       await db.query(
-          "UPDATE `orders` SET `customer_name`=?, `order_date`=?, `mobile`=?, `total_price`=?, `payment_status`=? WHERE `id`=?",
-          [customerName, orderDate, mobile, totalPrice, paymentStatus, orderId]
+        "INSERT INTO `order_items` (`order_id`, `product_name`, `quantity`, `price`) VALUES (?, ?, ?, ?)",
+        [orderId, product.name, product.quantity, product.price]
       );
+    }
 
-      // Delete existing order items
-      await db.query("DELETE FROM `order_items` WHERE `order_id`=?", [orderId]);
-
-      // Insert updated products
-      for (const product of products) {
-          await db.query(
-              "INSERT INTO `order_items` (`order_id`, `product_name`, `quantity`, `price`) VALUES (?, ?, ?, ?)",
-              [orderId, product.name, product.quantity, product.price]
-          );
-      }
-
-      res.status(200).json({ message: "Order updated successfully!" });
+    res.status(200).json({ message: "Order updated successfully!" });
   } catch (error) {
-      console.error("Error updating order:", error);
-      res.status(500).json({ error: "Failed to update order" });
+    console.error("Error updating order:", error);
+    res.status(500).json({ error: "Failed to update order" });
   }
 });
 
