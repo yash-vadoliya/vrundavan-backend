@@ -61,8 +61,8 @@ router.put("/product/:id", upload.single("image"), async (req, res) => {
   try {
     const { id } = req.params;
     const { product_name, description, category, price, stock, status } = req.body;
-    let image_url = req.file ? `/images/${req.file.filename}` : null;
-
+    // let image_url = req.file ? `/images/${req.file.filename}` : null;
+    const image_url = req.file.path; // Cloudinary image URL
     // Fetch current image from database
     const [rows] = await db.query("SELECT image_url FROM products WHERE id = ?", [id]);
     if (rows.length === 0) {
