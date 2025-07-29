@@ -10,7 +10,8 @@ router.post("/product", upload.single("image"), async (req, res) => {
   
   try {
     const { product_name, description, category, price, stock, status } = req.body;
-    const image_url = req.file ? `/images/${req.file.filename}` : null;
+    // const image_url = req.file ? `/images/${req.file.filename}` : null;
+    const image_url = req.file.path; // Cloudinary image URL
 
     if (!product_name || !description || !category || !price || !stock || !image_url) {
       return res.status(400).json({ error: "All fields are required, including image!" });
