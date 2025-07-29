@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.20.3",
+    "cloudinary": "^1.30.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^4.21.2",
@@ -18,11 +19,11 @@
     "jspdf-autotable": "^5.0.2",
     "mongoose": "^8.12.1",
     "multer": "^1.4.5-lts.1",
+    "multer-storage-cloudinary": "^4.0.0",
     "mysql2": "^3.13.0",
     "pdfkit": "^0.17.0",
     "sequelize": "^6.37.6",
     "wbm": "^1.1.16"
   },
-  "devDependencies": {},
   "description": ""
 }
