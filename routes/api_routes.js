@@ -59,23 +59,23 @@ router.get("/product/:id", async (req, res) => {
 
 // Product Update Route 
 router.put("/product/:id", upload.single("image"), async (req, res) => {
-
-  console.log("Received Data:", req.body);
-  console.log("Uploaded File:", req.file);
-
   try {
     const { id } = req.params;
     const { product_name, description, category, price, stock, status } = req.body;
-    // let image_url = req.file ? `/images/${req.file.filename}` : null;
-    const image_url = req.file ? req.file.path : null; // Cloudinary image URL  
+    const new_image_url = req.file ? req.file.path : null;; // Cloudinary image URL  
     // Fetch current image from database
     console.log(id,product_name, description, category, price, stock, status,image_url);
+
     const [rows] = await db.query("SELECT image_url FROM products WHERE id = ?", [id]);
     if (rows.length === 0) {
       return res.status(404).json({ error: "Product not found!" });
     } 
+
+    const current_image_url = rows[0].image_url;
+    const final_image_url = new_image_url || current_image_url;
+
     const sql = "UPDATE products SET product_name = ?, description = ?, category = ?, price = ?, stock = ?, status = ?, image_url = ? WHERE id = ?";
-    const values = [product_name, description, category, price, stock, status, image_url, id];
+    const values = [product_name, description, category, price, stock, status, final_image_url, id];
 
     await db.query(sql, values);
     res.status(200).json({ message: "Product updated successfully!", image_url });
