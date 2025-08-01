@@ -67,8 +67,9 @@ router.put("/product/:id", upload.single("image"), async (req, res) => {
     const { id } = req.params;
     const { product_name, description, category, price, stock, status } = req.body;
     // let image_url = req.file ? `/images/${req.file.filename}` : null;
-    const image_url = req.file.path || rows[0].image_url; // Cloudinary image URL  
+    const image_url = req.file ? req.file.path : null; // Cloudinary image URL  
     // Fetch current image from database
+    console.log(id,product_name, description, category, price, stock, status,image_url);
     const [rows] = await db.query("SELECT image_url FROM products WHERE id = ?", [id]);
     if (rows.length === 0) {
       return res.status(404).json({ error: "Product not found!" });
