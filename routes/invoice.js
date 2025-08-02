@@ -36,23 +36,6 @@ router.post("/bills", async (req, res) => {
         console.error("DB Error:", err);
         return res.status(500).json({ success: false, message: "Database error." });
       }
-
-      // ✅ Generate custom alias download link (use ngrok URL here)
-      // const downloadLink = `https://845a-2401-4900-8fc4-4166-1c77-2176-88c9-ad1a.ngrok-free.app/download/${filename}`; // Update with your ngrok link
-      // const message = `🧾 *Vrundavan Dairy Farm Bill*\n\n👤 *Name:* ${customerName}\n📅 *Date:* ${orderDate}\n\n📥 *Download your bill here:*\n${downloadLink}`;
-
-      // // ✅ Send WhatsApp
-      // try {
-      //   await wbm.start({ showBrowser: false });
-      //   await wbm.send([`+91${mobileNumber}`], message);
-      //   await wbm.end();
-
-      //   return res.json({ success: true, message: "Bill saved and WhatsApp message sent!" });
-      // } catch (msgErr) {
-      //   console.error("WhatsApp Error:", msgErr);
-      //   return res.status(500).json({ success: false, message: "Failed to send WhatsApp message." });
-      // }
-
       return res.json({
         success: true,
         message: "Bill saved successfully!",
@@ -66,18 +49,13 @@ router.post("/bills", async (req, res) => {
   }
 });
 
-// ✅ Alias download route
-router.get("/download/:filename", (req, res) => {
-  const filename = req.params.filename;
-  const filePath = path.join(__dirname, "../public/invoice", filename);
-  const alias = `Vrundavan_Bill_${filename}`; // Custom name for download
-
-  res.download(filePath, alias, (err) => {
-    if (err) {
-      console.error("Download Error:", err);
-      res.status(404).send("Bill not found.");
-    }
-  });
-});
+router.get('/bills', async(req,res) => {
+  try{
+    const data = `SELECT * FROM bills;`
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+})
 
 module.exports = router;
