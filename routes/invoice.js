@@ -56,7 +56,7 @@ router.post("/bills", async (req, res) => {
 
 router.get('/bills', async(req,res) => {
   try{
-    const data = `SELECT * FROM bills;`
+    const data = await db.query(`SELECT * FROM bills`)
     res.json(data);
   } catch (err) {
     res.status(500).json({ error: "Internal Server Error" });
