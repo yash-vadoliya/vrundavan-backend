@@ -2,49 +2,42 @@ const express = require("express");
 const router = express.Router();
 const fs = require("fs");
 const path = require("path");
-const db = require("../db"); // Assuming a DB connection is already set up
-const wbm = require("wbm");
-const jsPDF = require("jspdf");
+const db = require("../db");
+const cloudinary = require("../utils/cloudinary");
+const upload = require('../middleware/bills'); // multer for receiving file
+const { promisify } = require("util");
 
-// 📌 POST route to receive image, convert to PDF, store it, save DB, send WhatsApp
-router.post("/bills", async (req, res) => {
+const unlinkAsync = promisify(fs.unlink); // For deleting local file after upload
+
+router.post("/bills", upload.single("bills"), async (req, res) => {
   try {
-    // const {  filename, mobileNumber, orderDate, customerName, pdfBase64 } = req.body;
+    const { customerName, mobileNumber, orderDate } = req.body;
+    const { path: localFilePath } = req.file;
 
-    // console.log(filename, mobileNumber, orderDate, customerName);
+    // 1. Upload PDF to Cloudinary
+    const cloudResult = await cloudinary.uploader.upload(localFilePath, {
+      folder: "bills",
+      resource_type: "raw", // Use 'raw' for PDF files
+    });
 
-    // if ( !filename || !mobileNumber || !orderDate || !customerName || !pdfBase64) {
-    //   return res.status(400).json({ success: false, message: "Missing required fields." });
-    // }
+    // 2. Delete local file
+    await unlinkAsync(localFilePath);
 
-    // const filePath = path.join(__dirname, "../public/invoice", filename);
+    // 3. Insert into database (store Cloudinary URL)
+    const insertQuery = `
+      INSERT INTO bills (cust_name, pdf, mobile, date)
+      VALUES (?, ?, ?, ?)`;
 
-    // // Ensure the directory exists
-    // const dir = path.join(__dirname, "../public/invoice");
-    // if (!fs.existsSync(dir)) {
-    //   fs.mkdirSync(dir, { recursive: true });
-    // }
-
-    // //save PDF from base64
-    // const buffer = Buffer.from(pdfBase64, "base64");
-    // fs.writeFileSync(filePath, buffer);
-
-      const {customerName, mobileNumber, orderDate} = req.body;
-    const {filename} = req.file;
-
-    console.log(res.body);
-
-    // Insert into database
-    const insert = "INSERT INTO `bills` (`cust_name`, `pdf`, `mobile`, `date`) VALUES (?, ?, ?, ?)";
-    db.query(insert, [customerName, filename, mobileNumber, orderDate], async (err) => {
+    db.query(insertQuery, [customerName, cloudResult.secure_url, mobileNumber, orderDate], (err) => {
       if (err) {
         console.error("DB Error:", err);
         return res.status(500).json({ success: false, message: "Database error." });
       }
+
       return res.json({
         success: true,
-        message: "Bill saved successfully!",
-        downloadLink: downloadLink
+        message: "Bill uploaded and saved!",
+        pdfUrl: cloudResult.secure_url
       });
     });
 
