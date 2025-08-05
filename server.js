@@ -2,9 +2,8 @@ require ('dotenv').config();
 const express = require("express");
 const cors = require("cors");
 const routes = require("./routes/api_routes");
-const path = require("path");
+// const path = require("path");
 const bill = require("./routes/invoice");
-// const HOST = process.env.DB_HOST;
 const PORT = process.env.PORT;
 
 // // const cors = require("cors");
