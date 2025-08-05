@@ -3,7 +3,7 @@ const router = express.Router();
 const fs = require("fs");
 const path = require("path");
 const db = require("../db");
-const cloudinary = require("../utils/cloudinary");
+// const cloudinary = require("../utils/cloudinary");
 const upload = require('../middleware/bills'); // multer for receiving file
 const { promisify } = require("util");
 
