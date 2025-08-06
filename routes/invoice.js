@@ -1,33 +1,34 @@
 const express = require("express");
 const router = express.Router();
-// const fs = require("fs");
-// const path = require("path");
 const db = require("../db");
-// const cloudinary = require("../utils/cloudinary");
-const billUpload = require('../middleware/bills'); // multer for receiving file
+const cloudinary = require("../utils/cloudinary");
+const billUpload = require('../middleware/bills'); // multer config
+const fs = require("fs");
 const { promisify } = require("util");
 
-const unlinkAsync = promisify(fs.unlink); // For deleting local file after billUpload
+const unlinkAsync = promisify(fs.unlink);
 
 router.post("/bills", billUpload.single("bills"), async (req, res) => {
   try {
     const { customerName, mobileNumber, orderDate } = req.body;
-    const {pdf} = req.file.path;
-    // if (!req.file) {
-    //   return res.status(400).json({ success: false, message: "No file uploaded." });
-    // }
 
-    // const { path: localFilePath } = req.file;
-    // // 1. Upload PDF to Cloudinary
-    const cloudResult = await cloudinary.uploader.billUpload(localFilePath, {
+    // 1. Ensure a file was uploaded
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "No file uploaded." });
+    }
+
+    const localFilePath = req.file.path;
+
+    // 2. Upload PDF to Cloudinary
+    const cloudResult = await cloudinary.uploader.upload(localFilePath, {
       folder: "bills",
-      resource_type: "raw", // Use 'raw' for PDF files
+      resource_type: "raw", // 'raw' for non-image files like PDFs
     });
 
-    // 2. Delete local file
+    // 3. Delete local file
     await unlinkAsync(localFilePath);
 
-    // 3. Insert into database (store Cloudinary URL)
+    // 4. Insert record into database
     const insertQuery = `
       INSERT INTO bills (cust_name, pdf, mobile, date)
       VALUES (?, ?, ?, ?)`;
@@ -38,7 +39,7 @@ router.post("/bills", billUpload.single("bills"), async (req, res) => {
         return res.status(500).json({ success: false, message: "Database error." });
       }
 
-      return res.json({
+      res.json({
         success: true,
         message: "Bill uploaded and saved!",
         pdfUrl: cloudResult.secure_url
@@ -53,11 +54,11 @@ router.post("/bills", billUpload.single("bills"), async (req, res) => {
 
 router.get('/bills', async (req, res) => {
   try {
-    const data = await db.query(`SELECT * FROM bills`)
+    const data = await db.query(`SELECT * FROM bills`);
     res.json(data);
   } catch (err) {
     res.status(500).json({ error: "Internal Server Error" });
   }
-})
+});
 
 module.exports = router;
