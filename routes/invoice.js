@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const fs = require("fs");
-const path = require("path");
+// const fs = require("fs");
+// const path = require("path");
 const db = require("../db");
 // const cloudinary = require("../utils/cloudinary");
 const billUpload = require('../middleware/bills'); // multer for receiving file
