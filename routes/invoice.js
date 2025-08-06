@@ -12,12 +12,13 @@ const unlinkAsync = promisify(fs.unlink); // For deleting local file after billU
 router.post("/bills", billUpload.single("bills"), async (req, res) => {
   try {
     const { customerName, mobileNumber, orderDate } = req.body;
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: "No file uploaded." });
-    }
+    const {pdf} = req.file.path;
+    // if (!req.file) {
+    //   return res.status(400).json({ success: false, message: "No file uploaded." });
+    // }
 
-    const { path: localFilePath } = req.file;
-    // 1. Upload PDF to Cloudinary
+    // const { path: localFilePath } = req.file;
+    // // 1. Upload PDF to Cloudinary
     const cloudResult = await cloudinary.uploader.billUpload(localFilePath, {
       folder: "bills",
       resource_type: "raw", // Use 'raw' for PDF files
