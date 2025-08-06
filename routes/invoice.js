@@ -4,18 +4,21 @@ const fs = require("fs");
 const path = require("path");
 const db = require("../db");
 // const cloudinary = require("../utils/cloudinary");
-const upload = require('../middleware/bills'); // multer for receiving file
+const billUpload = require('../middleware/bills'); // multer for receiving file
 const { promisify } = require("util");
 
-const unlinkAsync = promisify(fs.unlink); // For deleting local file after upload
+const unlinkAsync = promisify(fs.unlink); // For deleting local file after billUpload
 
-router.post("/bills", upload.single("bills"), async (req, res) => {
+router.post("/bills", billUpload.single("bills"), async (req, res) => {
   try {
     const { customerName, mobileNumber, orderDate } = req.body;
-    const { path: localFilePath } = req.file;
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "No file uploaded." });
+    }
 
+    const { path: localFilePath } = req.file;
     // 1. Upload PDF to Cloudinary
-    const cloudResult = await cloudinary.uploader.upload(localFilePath, {
+    const cloudResult = await cloudinary.uploader.billUpload(localFilePath, {
       folder: "bills",
       resource_type: "raw", // Use 'raw' for PDF files
     });
@@ -47,8 +50,8 @@ router.post("/bills", upload.single("bills"), async (req, res) => {
   }
 });
 
-router.get('/bills', async(req,res) => {
-  try{
+router.get('/bills', async (req, res) => {
+  try {
     const data = await db.query(`SELECT * FROM bills`)
     res.json(data);
   } catch (err) {
