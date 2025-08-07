@@ -12,22 +12,8 @@ const unlinkAsync = promisify(fs.unlink); // For deleting local file after billU
 router.post("/bills", billUpload.single("bills"), async (req, res) => {
   try {
     const { customerName, mobileNumber, orderDate } = req.body;
-    // if (!req.file) {
-    //   return res.status(400).json({ success: false, message: "No file uploaded." });
-    // }
-
-    // const { path: localFilePath } = req.file;
     const pdf = req.file.path;
-    // // 1. Upload PDF to Cloudinary
-    // const cloudResult = await cloudinary.uploader.billUpload(localFilePath, {
-    //   folder: "bills",
-    //   resource_type: "raw", // Use 'raw' for PDF files
-    // });
 
-    // 2. Delete local file
-    await unlinkAsync(localFilePath);
-
-    // 3. Insert into database (store Cloudinary URL)
     const insertQuery = `
       INSERT INTO bills (cust_name, pdf, mobile, date)
       VALUES (?, ?, ?, ?)`;
@@ -38,11 +24,12 @@ router.post("/bills", billUpload.single("bills"), async (req, res) => {
         return res.status(500).json({ success: false, message: "Database error." });
       }
 
-      return res.json({
-        success: true,
-        message: "Bill uploaded and saved!",
-        pdfUrl: cloudResult.secure_url
-      });
+      // return res.json({
+      //   success: true,
+      //   message: "Bill uploaded and saved!",
+      //   pdfUrl: cloudResult.secure_url
+      // });
+      res.status(201).json({ message: "Product added successfully!",});
     });
 
   } catch (err) {
